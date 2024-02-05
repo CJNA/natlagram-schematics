@@ -31,7 +31,7 @@ The installation instructions and natlagram have been tested on Ubuntu 22.04.
 If you have Docker and Docker compose installed, run the following to start Kroki.
 
     cd path/to/project/devops
-	sudo docker compose up -d
+	docker compose up -d
 
 If you don’t have Docker and Compose, we’ve provided an Ansible script to ease the installation.
 First, install Ansible.

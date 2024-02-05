@@ -7,7 +7,9 @@ import sys
 import multiprocessing as mp
 import time
 
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=secret.OPENAI_API_KEY)
 import tiktoken
 
 import secret
@@ -15,7 +17,6 @@ import bot_primer
 from chatGPT import AbstractModel
 import const
 
-openai.api_key = secret.OPENAI_API_KEY
 
 class InteractionMode(Enum):
     """handling of model state in a conversation
@@ -137,17 +138,15 @@ class Model(AbstractModel):
             prompt: the prompt to the model by the user
             temperature: temperature controls the determinism of the model's response
         """
-        response = openai.ChatCompletion.create(
-            messages=self.messages,
-            max_tokens=self.estimate_available_tokens(prompt),
-            temperature=temperature,
-            model=self.model,
-            n=self.n,
-            stream=self.stream,
-            presence_penalty=self.presence_penalty,
-            frequency_penalty=self.frequency_penalty,
-            logit_bias=self.logit_bias,
-        )
+        response = client.chat.completions.create(messages=self.messages,
+        max_tokens=self.estimate_available_tokens(prompt),
+        temperature=temperature,
+        model=self.model,
+        n=self.n,
+        stream=self.stream,
+        presence_penalty=self.presence_penalty,
+        frequency_penalty=self.frequency_penalty,
+        logit_bias=self.logit_bias)
         q.put(response)
 
     def complete_chat_verbose(self, prompt: str, temperature: float) -> Dict:
@@ -203,8 +202,8 @@ class Model(AbstractModel):
         self.messages.append(message)
 
         response = self.complete_chat_verbose(prompt, temperature)
-        assistant_messages = [choice["message"] for choice in response["choices"]]
-        assistant_texts = [choice["message"]["content"] for choice in response["choices"]]
+        assistant_messages = [choice["message"] for choice in response.choices]
+        assistant_texts = [choice["message"]["content"] for choice in response.choices]
         self.messages = self.messages + assistant_messages
 
         if debug:
@@ -293,7 +292,7 @@ class Model(AbstractModel):
         response = self.complete_chat_verbose(prompt, temperature)
         self.messages = clean_messages
 
-        texts = [choice["message"]["content"] for choice in response["choices"]]
+        texts = [choice["message"]["content"] for choice in response.choices]
 
         if debug:
             print("prompt:", prompt)
